@@ -1,14 +1,22 @@
 import { Request, Response } from "express";
 import { crearToken } from "../services/auth.service";
 import { validarReqToken } from "../models/seguridad.model";
+import { queryBD } from "../services/bd.service";
 
-export const obtenerToken = (req: Request, res: Response) => {
+export const obtenerToken = async (req: Request, res: Response) => {
   try {
     const data = req.body;
     const valid = validarReqToken(data);
     if (valid.error) throw "Objeto no valido";
 
-    res.send({ token: crearToken(data) });
+    const db = await queryBD(
+      `select * from usuarios where correo = '${data.correo}'`
+    );
+    if (db.length === 1) {
+      res.send({ token: crearToken(data) });
+    } else {
+      throw "usuario no existe";
+    }
   } catch (err) {
     res.status(422).send({ err });
   }

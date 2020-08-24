@@ -1,6 +1,9 @@
 para iniciar el proyecto
 
-git clone
+// copia del repositorio
+git clone https://github.com/nikacer/servInformacion.git
+
+// instalacion de dependencias necesarias y de desarrolllo
 npm i
 
 npm run debug // inicializa modo de compilacion para desarrollo (compilacion automatica y servidor con nodemon)

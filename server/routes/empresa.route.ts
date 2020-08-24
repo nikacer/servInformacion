@@ -12,5 +12,12 @@ export const empresasRoute = () => {
     empresaController.consultarEmpresas
   );
 
+  router.post(`${path}/insertar`, authMiddleware, empresaController.Empresa);
+  router.post(
+    `${path}/catalogo/insertar`,
+    authMiddleware,
+    empresaController.Catalogo
+  );
+
   return router;
 };
