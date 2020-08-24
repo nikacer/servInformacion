@@ -19,5 +19,11 @@ export const empresasRoute = () => {
     empresaController.Catalogo
   );
 
+  router.post(
+    `${path}/catalogo/sede`,
+    authMiddleware,
+    empresaController.relacionarCatalogoSede
+  );
+
   return router;
 };

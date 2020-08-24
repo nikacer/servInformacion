@@ -1,7 +1,11 @@
 import { Request, Response } from "express";
 import { queryBD } from "../services/bd.service";
 import { obtenerCoordenadas } from "../services/maps.service";
-import { validarEmpresa } from "../models/empresa.model";
+import {
+  validarEmpresa,
+  validarcatalogo,
+  CatalogoSede,
+} from "../models/empresa.model";
 import Joi from "joi";
 import { Query } from "pg";
 
@@ -47,4 +51,95 @@ export const Empresa = async (req: Request, res: Response) => {
   }
 };
 
-export const Catalogo = (req: Request, res: Response) => {};
+export const Catalogo = async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+    const valid = validarcatalogo(data);
+    if (valid.error)
+      throw `Objeto no valido ${JSON.stringify(
+        valid.error.details.map((det) => det.message)
+      )}`;
+
+    const { sp_existeEmpresa } = (
+      await queryBD(`SELECT public."sp_existeEmpresa"(${data.id_empresa})`)
+    )[0];
+
+    const { sp_existeMoneda } = (
+      await queryBD(`SELECT public."sp_existeMoneda"(${data.id_moneda})`)
+    )[0];
+
+    const { sp_existeCategoria } = (
+      await queryBD(`SELECT public."sp_existeCategoria"(${data.id_categoria})`)
+    )[0];
+
+    if (
+      sp_existeEmpresa == 0 ||
+      sp_existeMoneda == 0 ||
+      sp_existeCategoria == 0
+    )
+      throw {
+        sp_existeEmpresa,
+        sp_existeMoneda,
+        sp_existeCategoria,
+      };
+
+    let query = `Insert into catalogos (tipo, nombre, descripcion,costo, id_categoria, id_moneda, id_empresa) values 
+    ('${data.tipo}','${data.nombre}','${data.descripcion}',${data.costo},${data.id_categoria},${data.id_moneda},${data.id_empresa}) RETURNING id`;
+    if (data.id)
+      query = `UPDATE catalogos set
+     tipo='${data.tipo}', nombre='${data.nombre}', descripcion = '${data.descripcion}', id_categoria=${data.id_categoria}, 
+     id_moneda = ${data.id_moneda} where id = ${data.id}`;
+
+    const result = await queryBD(query);
+    if (result.error) throw result.error;
+
+    res.send({ result: "ok", id: data.id ? data.id : result[0].id });
+  } catch (err) {
+    res.status(500).send({ err, msj: "Error interno" });
+  }
+};
+
+export const relacionarCatalogoSede = async (req: Request, res: Response) => {
+  try {
+    const data = req.body;
+    const valid = CatalogoSede(data);
+
+    if (valid.error) throw valid.error.details.map((det) => det.message);
+
+    const resultCatalogo = (
+      await queryBD(
+        `select * from  catalogo_sede where id_sede = ${data.id_sede}`
+      )
+    ).map((resp: any) => resp.id_catalogo);
+
+    data.catalogos.forEach(async (catalogo: any) => {
+      const accion = resultCatalogo.indexOf(catalogo.id_catalogo);
+      let result;
+      switch (accion) {
+        case -1:
+          result = await queryBD(
+            `insert into catalogo_sede values (${data.id_sede},${catalogo.id_catalogo},${catalogo.estado})`
+          );
+          break;
+        default:
+          result = await queryBD(
+            `UPDATE catalogo_sede set estado = ${catalogo.estado}
+               where id_catalogo=${catalogo.id_catalogo} and id_sede = ${data.id_sede}`
+          );
+          break;
+      }
+      if (result.error) throw result.error;
+
+      result = await queryBD(`select id_catalogo,estado from catalogo_sede`);
+      if (result.error) throw result.error;
+      res.send({
+        data: {
+          id_sede: data.id_sede,
+          catalogos: result,
+        },
+      });
+    });
+  } catch (err) {
+    res.status(500).send({ err, msj: "Error Interno" });
+  }
+};

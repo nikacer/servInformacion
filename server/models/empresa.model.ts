@@ -19,7 +19,7 @@ export const validarEmpresa = (input: object) => {
 export const validarcatalogo = (input: object) => {
   const catalogo = Joi.object({
     id: Joi.string().optional(),
-    tipo: Joi.string().required().validate(["p", "s"]),
+    tipo: Joi.string().required().max(1),
     nombre: Joi.string().required(),
     descripcion: Joi.string().required(),
     costo: Joi.number().required(),
@@ -34,11 +34,12 @@ export const validarcatalogo = (input: object) => {
 export const CatalogoSede = (input: object) => {
   const catalogoSede = Joi.object({
     id_catalogo: Joi.number().required(),
-    id_sede: Joi.number().required(),
+    estado: Joi.boolean().required(),
   });
 
   const schema = Joi.object({
-    catalogos: Joi.array().ordered(catalogoSede),
+    id_sede: Joi.number().required(),
+    catalogos: Joi.array().ordered(catalogoSede).min(1),
   });
 
   return schema.validate(input);
