@@ -20,6 +20,8 @@ export const consultarEmpresas = async (req: Request, res: Response) => {
 
 export const Empresa = async (req: Request, res: Response) => {
   try {
+    console.log("----->", localStorage.getItem("user"));
+
     let data = req.body;
     const result = validarEmpresa(data);
     if (result.error)

@@ -10,9 +10,10 @@ export const obtenerToken = async (req: Request, res: Response) => {
     if (valid.error) throw "Objeto no valido";
 
     const db = await queryBD(
-      `select * from usuarios where correo = '${data.correo}'`
+      `select nombre,correo,id_empresa,rol from usuarios where correo = '${data.correo}'`
     );
     if (db.length === 1) {
+      localStorage.setItem("user", JSON.stringify(db[0]));
       res.send({ token: crearToken(data) });
     } else {
       throw "usuario no existe";
