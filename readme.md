@@ -26,6 +26,8 @@ es necesario que exista el usuario en la base de datos
 !importante a partir de aca debe entregarse el token de lo contrario ninguna peticion respondera los datos esperados
 header:{ Authorization: "Bearer Token"}
 
+para facilitar la revision todas las peticiones son POST
+
 para insertar una nueva empresa, si la empresa no tiene id se creara una, de lo contrario se modificara, del mismo modo pasa con las sedes
 
 localhost:5000/empresa/insertar
@@ -66,3 +68,10 @@ localhost:5000/empresa/catalogo/sede
         "estado": true
     }]
 }
+
+
+para listar todas las empresas
+
+localhost:5000/empresa/todas
+
+
